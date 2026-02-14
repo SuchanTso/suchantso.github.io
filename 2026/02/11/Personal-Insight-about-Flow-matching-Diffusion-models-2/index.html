@@ -1,0 +1,397 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2) | Suchan's Home</title><meta name="author" content="SuchanTso"><meta name="copyright" content="SuchanTso"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="构建训练目标 前言：前文我们在假设向量场 $u_t(X_t)$ 已知的情况下，分别推导了 ODE 和 SDE 的前向过程。这一节我们将推导如何构建一个训练目标，让神经网络来学习。  假设神经网络 $u^{\theta}_{t}(x)$，我们有损失函数：  $$ \begin{align} \mathcal{L}(\theta) &#x3D; \mathbb{E}_{t, x} \left[ \| u^{\t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)">
+<meta property="og:url" content="https://blog.suchantso.cn/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/index.html">
+<meta property="og:site_name" content="Suchan&#39;s Home">
+<meta property="og:description" content="构建训练目标 前言：前文我们在假设向量场 $u_t(X_t)$ 已知的情况下，分别推导了 ODE 和 SDE 的前向过程。这一节我们将推导如何构建一个训练目标，让神经网络来学习。  假设神经网络 $u^{\theta}_{t}(x)$，我们有损失函数：  $$ \begin{align} \mathcal{L}(\theta) &#x3D; \mathbb{E}_{t, x} \left[ \| u^{\t">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png">
+<meta property="article:published_time" content="2026-02-11T13:51:40.000Z">
+<meta property="article:modified_time" content="2026-02-14T11:19:57.461Z">
+<meta property="article:author" content="SuchanTso">
+<meta property="article:tag" content="Generative Models">
+<meta property="article:tag" content="Flow Matching">
+<meta property="article:tag" content="Diffusion">
+<meta property="article:tag" content="ODE&#x2F;SDE">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.suchantso.cn/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":{"internal_provider":"unpkg"},"preload":true,"top_n_per_article":3,"unescape":false,"languages":{"hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":230},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Error',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"You have switched to Traditional Chinese","cht_to_chs":"You have switched to Simplified Chinese","day_to_night":"You have switched to Dark Mode","night_to_day":"You have switched to Light Mode","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"top-right"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Theoretical Perspectives on Flow Matching & Diffusion Models (2)',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026-02-14 19:19:57'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">Loading...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load',() => { preloader.endLoading() })
+
+  if (true) {
+    document.addEventListener('pjax:send', () => { preloader.initLoading() })
+    document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+  }
+})()</script><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/tx.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png')"><nav id="nav"><span id="blog-info"><a href="/" title="Suchan's Home"><span class="site-name">Suchan's Home</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> Search</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-02-11T13:51:40.000Z" title="Created 2026-02-11 21:51:40">2026-02-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-14T11:19:57.461Z" title="Updated 2026-02-14 19:19:57">2026-02-14</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">Word Count:</span><span class="word-count">2.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">Reading Time:</span><span>8mins</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="构建训练目标"><a href="#构建训练目标" class="headerlink" title="构建训练目标"></a>构建训练目标</h1><blockquote>
+<p><strong>前言</strong>：<br>前文我们在假设向量场 $u_t(X_t)$ 已知的情况下，分别推导了 ODE 和 SDE 的前向过程。这一节我们将推导如何构建一个训练目标，让神经网络来学习。</p>
+</blockquote>
+<p>假设神经网络 $u^{\theta}_{t}(x)$，我们有损失函数：</p>
+
+$$
+\begin{align}
+\mathcal{L}(\theta) = \mathbb{E}_{t, x} \left[ \| u^{\theta}_{t}(x) - \underbrace{u^{target}_{t}(x)}_\text{training target} \|^2 \right]
+\end{align}
+$$
+
+<h1 id="条件概率路径和边缘概率路径"><a href="#条件概率路径和边缘概率路径" class="headerlink" title="条件概率路径和边缘概率路径"></a>条件概率路径和边缘概率路径</h1><p>如图所示，我们将初始分布（噪声）到目标分布（数字）做一个插值，就是一个概率路径。<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/flow_diffusion_insight/interplation_cond_path.jpg" alt="interpolation_cond_path"></p>
+<p>在这个例子下，我们进一步描述：整个目标分布就是 0～9 的数字图像（MNIST）。假设我们采样了一张确切的图像 $z$（例如图中的数字 2）。</p>
+<ul>
+<li>一个从初始分布到目标样本 $z$ 的插值路径，被称为一个<strong>条件概率路径</strong> $p_t(\cdot | z)$。</li>
+<li>一个从初始分布，到目标分布的所有条件路径的加权和，被称为<strong>边缘概率路径</strong> $p_t(\cdot)$。形象地说，就是从初始分布到包含了所有数字图像的插值路径。</li>
+</ul>
+<p>用数学表示来说，我们可以得到边界条件：<br>$$<br>\begin{align}<br>p_0(\cdot | z) &#x3D; p_{init}, \quad p_1(\cdot | z) &#x3D; \delta(\cdot - z), \quad \forall z \in \text{Dataset}<br>\end{align}<br>$$</p>
+<p>理论上来说，当我们拥有足够多的采样点后，是可以得到边缘概率路径的：</p>
+
+$$
+\begin{align}
+z \sim p_{data}, \quad x \sim p_t(\cdot | z) \implies x \sim p_t \\
+p_t(x) = \int p_t(x | z)p_{data}(z) \mathrm{d}z
+\end{align}
+$$
+
+
+
+<p>遗憾的是：我们能够从目标分布中进行采样，但是不能确切得到 $p_t(x)$ 的值，因为上述积分没法进行（intractable）。<br>根据上文定义向量场的思想，我们只能尝试用神经网络来拟合一个向量场，间接完成从初始分布到目标分布的转换。于是我们有边缘向量场的定义：</p>
+<p>$$<br>\begin{align}<br>X_0 \sim p_{init}, \quad \frac{\mathrm{d}}{\mathrm{d}t}X_t &#x3D; u^{target}_t(X_t) \implies X_t \sim p_t \<br>u^{target}_t(x) &#x3D; \int u^{target}<em>t(x|z) \frac{p_t(x|z)p</em>{data}(z)}{p_t(x)} \mathrm{d}z<br>\end{align}<br>$$</p>
+<p>初见这个公式有些吓人，其实细细拆解一下也不难。依据贝叶斯公式：<br>$$<br>p(z|x) &#x3D; \frac{p(x|z)p(z)}{p(x)}<br>$$<br>那么我们不难将 (6) 式变为：<br>$$<br>\begin{align}<br>u^{target}_t(x) &#x3D; \int u^{target}_t(x|z) p(z|x) \mathrm{d}z<br>\end{align}<br>$$<br>依照数学期望公式，我们可以将 (7) 式进一步变为：</p>
+
+$$
+\begin{align}
+u^{target}_t(x) = \mathbb{E}_{z \sim p(z|x)} [ u^{target}_t(x|z) ]
+\end{align}
+$$
+
+
+
+<p>我们仔细观察这个式子，从 MNIST 例子的视角下再解读一下：</p>
+<ul>
+<li>$z \sim p(z|x)$ 提供的视角是：当前带噪声的图像 $x$ 可能是某个数字图像 $z$ 的后验概率（它是 1 的概率是 $w_1$，是 2 的概率是 $w_2$，…）。</li>
+<li>如果要生成数字 1，当前图像只需要沿着 $u^{target}_t(x|z_1)$ 走过去就好；生成数字 2 同理。</li>
+<li>只是现在没法确定我们要生成哪个样本，最理智的做法是：<strong>计算所有可能目标路径的加权平均（数学期望）</strong>。</li>
+</ul>
+<p>理解了上述的式子，我们可以直观形象地感受一下：<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/flow_diffusion_insight/trajctory_of_utarget.jpg" alt="trajctory of u_target"><br>图中第一行展示的是：当给定一个目标 $z$ 时，我们很容易从初始分布直勾勾地走向目标分布（条件概率）。<br>图中第二行展示的是：当我们对所有可能的 $z$ 进行加权（$z \sim p(z|x)$），我们能最终得到的概率路径（边缘概率路径）。</p>
+<h1 id="概率路径"><a href="#概率路径" class="headerlink" title="概率路径"></a>概率路径</h1><p>前文反复提到了概率路径，一直只讲述了起点和终点，而没有介绍过程。实际上好的路径对目标向量场的求解也十分重要。<br>大多数 Flow Matching Model 和 Diffusion Model 使用的都是<strong>高斯概率路径</strong>。</p>
+<p>设想一个高斯分布，其分布满足：$p_t(\cdot|z) &#x3D; \mathcal{N}(\alpha_t z , \beta^2_t I_d)$，其中 $\alpha_t$ 和 $\beta_t$ 是提前设定的超参数（Noise Schedule），我们令：</p>
+<ul>
+<li>$\alpha_0 &#x3D; 0, \alpha_1 &#x3D; 1$</li>
+<li>$\beta_0 &#x3D; 1, \beta_1 &#x3D; 0$ (或趋近于0)</li>
+</ul>
+<p>于是我们就有：<br>$p_0(\cdot|z) &#x3D; \mathcal{N}(0, I_d), \quad p_1(\cdot|z) \approx \delta(\cdot - z)$</p>
+<p>由高斯分布的特性，我们不难构造采样过程。引入标准高斯噪声 $\epsilon \sim \mathcal{N}(0, I_d)$，定义 Flow Map：<br>$$<br>\begin{align}<br>\psi^{target}_t(\epsilon | z) &#x3D; \alpha_t z + \beta_t \epsilon<br>\end{align}<br>$$<br>显然，这样构造的 $X_t &#x3D; \psi^{target}_t(\epsilon | z)$ 服从上述的高斯分布。</p>
+<p>有了 Flow Map 的定义，我们尝试求解对应的条件向量场 $u_t^{target}(x|z)$。<br>根据向量场的定义：<br>$$<br>\begin{align}<br>\frac{\mathrm{d}}{\mathrm{d}t} \psi^{target}_t(\epsilon | z) &amp;&#x3D; u^{target}_t(\psi^{target}_t(\epsilon | z) | z) \<br>\dot{\alpha}_t z + \dot{\beta}_t \epsilon &amp;&#x3D; u^{target}_t(\alpha_t z + \beta_t \epsilon | z)<br>\end{align}<br>$$<br>为了得到 $u^{target}_t(x|z)$ 的表达式，我们需要把等式右边的 $\epsilon$ 用 $x$ 替换。<br>令 $x &#x3D; \alpha_t z + \beta_t \epsilon$，则 $\epsilon &#x3D; \frac{x - \alpha_t z}{\beta_t}$。代入上式：<br>$$<br>\begin{align}<br>u^{target}_t(x|z) &amp;&#x3D; \dot{\alpha}_t z + \dot{\beta}_t \left( \frac{x - \alpha_t z}{\beta_t} \right) \<br>&amp;&#x3D; \left( \dot{\alpha}_t - \frac{\dot{\beta}_t \alpha_t}{\beta_t} \right) z + \frac{\dot{\beta}_t}{\beta_t} x<br>\end{align}<br>$$<br>这正是我们需要的条件向量场公式（Conditional Vector Field）。</p>
+<h2 id="扩展到-SDE"><a href="#扩展到-SDE" class="headerlink" title="扩展到 SDE"></a>扩展到 SDE</h2><p>前文我们在前向过程中从 ODE 添加布朗运动后，引入了 SDE。我们回顾一下 SDE 的形式：<br>$$<br>\begin{align}<br>\mathrm{d}X_t &amp;&#x3D; u(X_t, t)\mathrm{d}t + \sigma_t \mathrm{d}W_t<br>\end{align}<br>$$<br>一个形象的解释是：粒子知道当前时间步下应该往哪个方向走 ($u(X_t)$)，但是由于每一步走得都跌跌撞撞，有一些扰动（布朗运动导致的）。为了保持边缘分布不变，我们不得不添加一项修正：让每个粒子在走的同时，往目标概率密度最大的方向再做一个修正。我们将 SDE 的形式改写为：<br>$$<br>\begin{align}<br>\mathrm{d}X_t &amp;&#x3D; \left[ u^{target}_t(X_t) + \frac{\sigma_t^2}{2}\nabla \log p_t(X_t) \right] \mathrm{d}t + \sigma_t \mathrm{d}W_t<br>\end{align}<br>$$<br>其中 $\nabla \log p_t(x)$ 被称为 Score Function。</p>
+<p>在高斯概率路径中，条件 Score Function 有解析解：<br>$$<br>\begin{align}<br>\nabla \log p_t(x|z) &#x3D; \nabla \log \mathcal{N}(x; \alpha_t z, \beta^2_t I_d) &#x3D; - \frac{x - \alpha_t z}{\beta^2_t}<br>\end{align}<br>$$<br>这意味着我们可以从 Score Function 中反解出 $z$：<br>$$<br>z &#x3D; \frac{x + \beta_t^2 \nabla \log p_t(x|z)}{\alpha_t}<br>$$<br>将这个 $z$ 代入到之前推导的 ODE 向量场公式 (15) 中，我们可以发现 <strong>向量场 $u_t$ 与 Score Function 呈线性关系</strong>。</p>
+<p>这意味着，在实际推理过程中，尽管 SDE 形式上多了一个修正项，但我们可以将其合并。我们不需要训练两个模型，<strong>只需要训练一个模型（无论是拟合 $u$ 还是拟合 Score）</strong>，就能通过线性变换得到所需的全部项，完成推理。</p>
+<h1 id="总结：构建最终的训练目标-The-Training-Target"><a href="#总结：构建最终的训练目标-The-Training-Target" class="headerlink" title="总结：构建最终的训练目标 (The Training Target)"></a>总结：构建最终的训练目标 (The Training Target)</h1><p>至此，我们完成了从理论推导到工程实现的闭环。我们构建训练目标的核心逻辑可以概括为：<strong>“想要的是边缘目标，训练的是条件目标”</strong>。</p>
+<p>根据 Flow Matching 的理论（Marginalization Trick），拟合“简单的条件目标”在数学期望上等价于拟合“复杂的边缘目标”。因此，我们可以直接写出最终的 Loss 函数：</p>
+<ol>
+<li><p><strong>ODE (Flow Matching) 训练目标</strong>：<br>我们训练神经网络 $v_{\theta}(x_t, t)$ 去拟合<strong>条件向量场</strong>。对于高斯概率路径，这就是一个简单的线性回归：</p>
+
+    $$
+    \mathcal{L}_{FM}(\theta) = \mathbb{E}_{t, z, \epsilon} \left[ \| v_{\theta}(x_t) - u^{target}_t(x_t|z) \|^2 \right]
+    $$
+    
+<p>其中 $u^{target}_t(x_t|z)$ 由公式 (13) 给出，本质上是在预测从噪声 $x_t$ 变回数据 $z$ 的<strong>速度方向</strong>。</p>
+</li>
+<li><p><strong>SDE (Score Matching) 训练目标</strong>：<br>我们训练神经网络 $s_{\theta}(x_t, t)$ 去拟合<strong>条件分数函数</strong>。对于高斯分布，这等价于预测噪声（Denoising）：</p>
+
+    $$
+    \mathcal{L}_{SM}(\theta) = \mathbb{E}_{t, z, \epsilon} \left[ \| s_{\theta}(x_t) - \nabla \log p_t(x_t|z) \|^2 \right]
+    $$
+    
+
+<p>其中 $\nabla \log p_t(x_t|z) &#x3D; -\frac{x_t - \alpha_t z}{\beta_t^2}$，本质上是在预测<strong>噪声 $\epsilon$ 的反方向</strong>。</p>
+</li>
+</ol>
+<p>由于高斯路径下 $u_t$ 和 $\nabla \log p_t$ 存在线性关系，<strong>这两种训练目标本质上是互通的</strong>。我们完全可以使用 Flow Matching 的 Loss 训练一个模型，然后在推理阶段，通过公式变换，将其用于 SDE 的采样过程。这赋予了我们极大的灵活性：<strong>一次训练，既可确定性采样（ODE），也可随机性采样（SDE）。</strong></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://blog.suchantso.cn">SuchanTso</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://blog.suchantso.cn/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/">https://blog.suchantso.cn/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Generative-Models/">Generative Models</a><a class="post-meta__tags" href="/tags/Flow-Matching/">Flow Matching</a><a class="post-meta__tags" href="/tags/Diffusion/">Diffusion</a><a class="post-meta__tags" href="/tags/ODE-SDE/">ODE/SDE</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2025/12/17/Personal-Insight-about-Flow-matching-Diffusion-models_1/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next</div><div class="next_info">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2025/12/17/Personal-Insight-about-Flow-matching-Diffusion-models_1/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2025-12-17</div><div class="title">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)</div></div></a></div></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> Comment</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/tx.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">SuchanTso</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">2</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SuchanTso"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/SuchanTso" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:suchantso@zju.edu.cn" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">Welcome to Suchan's Home</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9E%84%E5%BB%BA%E8%AE%AD%E7%BB%83%E7%9B%AE%E6%A0%87"><span class="toc-number">1.</span> <span class="toc-text">构建训练目标</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9D%A1%E4%BB%B6%E6%A6%82%E7%8E%87%E8%B7%AF%E5%BE%84%E5%92%8C%E8%BE%B9%E7%BC%98%E6%A6%82%E7%8E%87%E8%B7%AF%E5%BE%84"><span class="toc-number">2.</span> <span class="toc-text">条件概率路径和边缘概率路径</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A6%82%E7%8E%87%E8%B7%AF%E5%BE%84"><span class="toc-number">3.</span> <span class="toc-text">概率路径</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%A9%E5%B1%95%E5%88%B0-SDE"><span class="toc-number">3.1.</span> <span class="toc-text">扩展到 SDE</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A%E6%9E%84%E5%BB%BA%E6%9C%80%E7%BB%88%E7%9A%84%E8%AE%AD%E7%BB%83%E7%9B%AE%E6%A0%87-The-Training-Target"><span class="toc-number">4.</span> <span class="toc-text">总结：构建最终的训练目标 (The Training Target)</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)"/></a><div class="content"><a class="title" href="/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)</a><time datetime="2026-02-11T13:51:40.000Z" title="Created 2026-02-11 21:51:40">2026-02-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/17/Personal-Insight-about-Flow-matching-Diffusion-models_1/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)"/></a><div class="content"><a class="title" href="/2025/12/17/Personal-Insight-about-Flow-matching-Diffusion-models_1/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)</a><time datetime="2025-12-17T13:51:40.000Z" title="Created 2025-12-17 21:51:40">2025-12-17</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png')"><div id="footer-wrap"><div class="copyright">&copy;2024 - 2026 By SuchanTso</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="Scroll To Comments"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="Back To Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.8.8/dist/lazyload.iife.min.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.1
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, '']
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.min.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typesetPromise()
+}</script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/copy-tex.min.js"></script><script>(() => {
+  document.querySelectorAll('#article-container span.katex-display').forEach(item => {
+    btf.wrap(item, 'div', { class: 'katex-wrap'})
+  })
+})()</script><script>(() => {
+  const initValine = () => {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: '7dV6j7IWjjIZv7thiRxm70Ra-gzGzoHsz',
+      appKey: 'sC96uyhY0UCNBG8EWS8YdmFO',
+      avatar: 'monsterid',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: false
+    }, null))
+  }
+
+  const loadValine = async () => {
+    if (typeof Valine === 'function') initValine()
+    else {
+      await getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js')
+      initValine()
+    }
+  }
+
+  if ('Valine' === 'Valine' || !true) {
+    if (true) btf.loadComment(document.getElementById('vcomment'),loadValine)
+    else setTimeout(loadValine, 0)
+  } else {
+    window.loadOtherComment = loadValine
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener
+  btf.removeGlobalFnEvent('pjax')
+  btf.removeGlobalFnEvent('themeChange')
+
+  document.getElementById('rightside').classList.remove('rightside-show')
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+  typeof disqusjs === 'object' && disqusjs.destroy()
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+})
+
+document.addEventListener('pjax:error', e => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">Search</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  Loading the Database</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="Search for Posts" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.13.0"></script></div></div></body></html>
