@@ -1,0 +1,439 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Theoretical Perspectives on Flow Matching &amp; Diffusion Models (3) | Suchan's Home</title><meta name="author" content="SuchanTso"><meta name="copyright" content="SuchanTso"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="前言：经过前面两篇文章，我们定义了flow matchin model和diffusion model的前向过程，并且构建了训练目标，从本文开始，我们将从高斯路径出发，推导实际的loss函数，然后着手分别训练unconditional flow model和unconditional diffusion model  训练一个生成式模型(上)flow model回顾flow matching m">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (3)">
+<meta property="og:url" content="https://blog.suchantso.cn/2026/02/15/Personal-Insight-about-Flow-matching-Diffusion-models-3/index.html">
+<meta property="og:site_name" content="Suchan&#39;s Home">
+<meta property="og:description" content="前言：经过前面两篇文章，我们定义了flow matchin model和diffusion model的前向过程，并且构建了训练目标，从本文开始，我们将从高斯路径出发，推导实际的loss函数，然后着手分别训练unconditional flow model和unconditional diffusion model  训练一个生成式模型(上)flow model回顾flow matching m">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png">
+<meta property="article:published_time" content="2026-02-15T08:04:36.000Z">
+<meta property="article:modified_time" content="2026-02-18T14:22:45.101Z">
+<meta property="article:author" content="SuchanTso">
+<meta property="article:tag" content="Generative Models">
+<meta property="article:tag" content="Flow Matching">
+<meta property="article:tag" content="Diffusion">
+<meta property="article:tag" content="ODE&#x2F;SDE">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://blog.suchantso.cn/2026/02/15/Personal-Insight-about-Flow-matching-Diffusion-models-3/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":{"internal_provider":"unpkg"},"preload":true,"top_n_per_article":3,"unescape":false,"languages":{"hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":230},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Error',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"You have switched to Traditional Chinese","cht_to_chs":"You have switched to Simplified Chinese","day_to_night":"You have switched to Dark Mode","night_to_day":"You have switched to Light Mode","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"top-right"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Theoretical Perspectives on Flow Matching & Diffusion Models (3)',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026-02-18 22:22:45'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">Loading...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load',() => { preloader.endLoading() })
+
+  if (true) {
+    document.addEventListener('pjax:send', () => { preloader.initLoading() })
+    document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+  }
+})()</script><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/tx.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url('https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png')"><nav id="nav"><span id="blog-info"><a href="/" title="Suchan's Home"><span class="site-name">Suchan's Home</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> Search</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (3)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2026-02-15T08:04:36.000Z" title="Created 2026-02-15 16:04:36">2026-02-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2026-02-18T14:22:45.101Z" title="Updated 2026-02-18 22:22:45">2026-02-18</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">Word Count:</span><span class="word-count">2.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">Reading Time:</span><span>13mins</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (3)"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
+<p>前言：经过前面两篇文章，我们定义了flow matchin model和diffusion model的前向过程，并且构建了训练目标，从本文开始，我们将从高斯路径出发，推导实际的loss函数，然后着手分别训练unconditional flow model和unconditional diffusion model</p>
+</blockquote>
+<h1 id="训练一个生成式模型-上"><a href="#训练一个生成式模型-上" class="headerlink" title="训练一个生成式模型(上)"></a>训练一个生成式模型(上)</h1><h2 id="flow-model"><a href="#flow-model" class="headerlink" title="flow model"></a>flow model</h2><h2 id="回顾flow-matching-model的定义：-begin-align-X-0-sim-p-init-quad-dX-t-u-theta-t-X-t-dt-end-align-直觉上说，我们应该定义loss函数：式中-p-t-x-int-p-t-x-z-p-data-z-dz-。这个loss做了几件事：-1、时间步t满足-0-1-的均匀分布-2、我们从-p-data-中采样z，添加噪声，计算-u-theta-t-x-3、计算-u-theta-t-x-和-u-target-t-x-如前文所说我们没法直接计算-u-target-t-x-因为：而我们没法得到-p-t-x-，于是我们尝试将目光转向条件概率路径，我们定义conditional-flow-matching-loss：虽然是可以计算的，但是计算出来是否有用，毕竟我们的最终目的是要最小化-mathcal-L-FM-theta-。答案是等价的，我们先放出结论：-下面给出证明："><a href="#回顾flow-matching-model的定义：-begin-align-X-0-sim-p-init-quad-dX-t-u-theta-t-X-t-dt-end-align-直觉上说，我们应该定义loss函数：式中-p-t-x-int-p-t-x-z-p-data-z-dz-。这个loss做了几件事：-1、时间步t满足-0-1-的均匀分布-2、我们从-p-data-中采样z，添加噪声，计算-u-theta-t-x-3、计算-u-theta-t-x-和-u-target-t-x-如前文所说我们没法直接计算-u-target-t-x-因为：而我们没法得到-p-t-x-，于是我们尝试将目光转向条件概率路径，我们定义conditional-flow-matching-loss：虽然是可以计算的，但是计算出来是否有用，毕竟我们的最终目的是要最小化-mathcal-L-FM-theta-。答案是等价的，我们先放出结论：-下面给出证明：" class="headerlink" title="回顾flow matching model的定义：$$\begin{align}X_0 \sim p_{init} , \quad dX_t &#x3D; u^{\theta}t(X_t)dt\end{align}$$直觉上说，我们应该定义loss函数：式中$p_t(x) &#x3D; \int p_t(x|z)p{data}(z)dz$。这个loss做了几件事：* 1、时间步t满足[0,1]的均匀分布* 2、我们从$p_{data}$中采样z，添加噪声，计算$u^{\theta}_t(x)$* 3、计算$u^{\theta}_t(x)$和$u^{target}_t(x)$如前文所说我们没法直接计算$u^{target}t(x)$,因为：而我们没法得到$p_t(x)$，于是我们尝试将目光转向条件概率路径，我们定义conditional flow matching loss：虽然是可以计算的，但是计算出来是否有用，毕竟我们的最终目的是要最小化$\mathcal{L}{FM}(\theta)$。答案是等价的，我们先放出结论：### 下面给出证明："></a>回顾flow matching model的定义：<br>$$<br>\begin{align}<br>X_0 \sim p_{init} , \quad dX_t &#x3D; u^{\theta}<em>t(X_t)dt<br>\end{align}<br>$$<br>直觉上说，我们应该定义loss函数：<br>
+$$
+\begin{align}
+\mathcal{L}_{FM}(\theta) = \mathbb{E}_{t\sim Unif, x\sim p_t}\left[ \| u^{\theta}_t(x) - u^{target}_t(x)\|^2\right]\\
+= \mathbb{E}_{t\sim Unif,z \sim p_{data}, x\sim p_t(\cdot | z)}\left[ \| u^{\theta}_t(x) - u^{target}_t(x)\|^2\right]
+\end{align}
+$$
+<br>式中$p_t(x) &#x3D; \int p_t(x|z)p</em>{data}(z)dz$。这个loss做了几件事：<br>* 1、时间步t满足[0,1]的均匀分布<br>* 2、我们从$p_{data}$中采样z，添加噪声，计算$u^{\theta}_t(x)$<br>* 3、计算$u^{\theta}_t(x)$和$u^{target}_t(x)$<br>如前文所说我们没法直接计算$u^{target}<em>t(x)$,因为：<br>
+$$
+\begin{align}
+u^{target}_t(x) = \int u^{target}_t(x|z) \frac{p_t(x|z)p_{data}(z)}{p_t(x)} \mathrm{d}z
+\end{align}
+$$
+<br>而我们没法得到$p_t(x)$，于是我们尝试将目光转向条件概率路径，我们定义conditional flow matching loss：<br>
+$$
+\begin{align}
+\mathcal{L}_{CFM}(\theta) = \mathbb{E}_{t\sim Unif,z \sim p_{data}, x\sim p_t(\cdot | z)}\left[ \| u^{\theta}_t(x) - u^{target}_t(x|z)\|^2\right]
+\end{align}
+$$
+<br>虽然$\mathcal{L}_{CFM}(\theta)$是可以计算的，但是计算出来是否有用，毕竟我们的最终目的是要最小化$\mathcal{L}</em>{FM}(\theta)$。答案是等价的，我们先放出结论：<br>
+$$
+\begin{align}
+\mathcal{L}_{FM}(\theta) = \mathcal{L}_{CFM}(\theta) + C
+\end{align}
+$$
+<br>### 下面给出证明：</h2>
+$$
+\begin{align}
+\mathcal{L}_{FM}(\theta) &= \mathbb{E}_{t\sim Unif,x \sim p_t}\left[\|u^{\theta}_t(x) - u^{target}_t(x)\|^2 \right]\\
+&= \mathbb{E}_{t\sim Unif,x \sim p_t}\left[\| u^{\theta}_t(x)\|^2 - 2u^{\theta}_t(x)^Tu^{target}_t(x) + \|u^{target}_t(x)\|^2\right]\\
+&=\mathbb{E}_{t\sim Unif,x \sim p_t}\left[\| u^{\theta}_t(x)\|^2\right] - 2\mathbb{E}_{t\sim Unif,x \sim p_t}\left[u^{\theta}_t(x)^Tu^{target}_t(x)\right] + \underbrace{\mathbb{E}_{t\sim Unif,x \sim p_t}\left[\|u^{target}_t(x)\|^2\right]}_\text{C1}\\
+&= \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[\| u^{\theta}_t(x)\|^2\right] - 2\mathbb{E}_{t\sim Unif,x \sim p_t}\left[u^{\theta}_t(x)^Tu^{target}_t(x)\right] + C1
+\end{align}
+$$
+
+<p>其中$\mathbb{E}_{t\sim Unif,x \sim p_t}\left[\|u^{target}_t(x)\|^2\right]$是整个目标分布的向量场，与我们训练的神经网络无关，所以可以将其化简为一个常数C1，现在还有一项$\mathbb{E}_{t\sim Unif,x \sim p_t}\left[u^{\theta}_t(x)^Tu^{target}_t(x)\right]$需要我们解决：</p>
+
+$$
+\begin{align}
+\mathbb{E}_{t\sim Unif,x \sim p_t}\left[u^{\theta}_t(x)^Tu^{target}_t(x)\right] 
+&= \int^1_0\int p_t(x)u^{\theta}_t(x)^Tu^{target}_t(x)\mathrm{d}x\mathrm{d}t\\
+&= \int^1_0\int p_t(x)u^{\theta}_t(x)^T\left[\int u^{target}_t(x|z) \frac{p_t(x|z)p_{data}(z)}{p_t(x)} \mathrm{d}z\right]\mathrm{d}x\mathrm{d}t\\
+&= \int^1_0\int\int u^{\theta}_t(x)^Tu^{target}_t(x|z)p_t(x|z)p_{data}(z)\mathrm{d}z\mathrm{d}x\mathrm{d}t\\
+&= \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[u^{\theta}_t(x)^Tu^{target}_t(x|z)\right]
+\end{align}
+$$
+
+<p>我们将这一项放回到$\mathcal{L}_{FM}(\theta)$中再做一个整理：</p>
+
+$$
+\begin{align}
+\mathcal{L}_{FM}(\theta)
+&= \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[\| u^{\theta}_t(x)\|^2\right] - 2\mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[u^{\theta}_t(x)^Tu^{target}_t(x|z)\right] + C1\\
+&= \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[\| u^{\theta}_t(x)\|^2 -2u^{\theta}_t(x)^Tu^{target}_t(x|z)\right] + C1\\
+&= \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[\| u^{\theta}_t(x)\|^2 -2u^{\theta}_t(x)^Tu^{target}_t(x|z) - \|u^{target}_t(x|z)\|^2 + \|u^{target}_t(x|z)\|^2\right] + C1\\
+&= \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[\| u^{\theta}_t(x) - u^{target}_t(x|z)\|^2\right] - \underbrace{\mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[ \|u^{target}_t(x|z)\|^2\right]}_\text{C2} + C1\\
+&= \mathcal{L}_{CFM}(\theta) + C1 + C2
+\end{align}
+$$
+
+<p>同样的$\mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim p_t(\cdot|z)}\left[ \|u^{target}_t(x|z)\|^2\right]$也和我们的神经网络无关，对于整个目标分布来说，其条件向量场也是不变的，所以我们将其化为常数C2</p>
+<hr>
+<p>ok我们成功的获得了一个可以实际计算的loss函数，现在，我们把它使用在高斯路径下，进一步梳理一下式子的形式：<br>记$\epsilon \sim \mathcal{N}(0,I_d)$,我们有$x_t &#x3D; \alpha_t z + \beta_t \epsilon \sim \mathcal{N}(\alpha_t z , \beta^2_t I_d) &#x3D; p_t(\cdot|z)$,根据我们构建的训练目标$u^{target}_t(x|z) &#x3D; (\dot{\alpha_t} - \frac{\dot{\beta}_t}{\beta_t})z + \frac{\dot{\beta}_t}{\beta_t}x$,代入loss函数：</p>
+
+$$
+\begin{align}
+\mathcal{L}_{CFM}(\theta)
+&= \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim \mathcal{N}(\alpha_t z ,\beta^2_t I_d)}\left[\|u^{\theta}_t(x) - (\dot{\alpha_t} - \frac{\dot{\beta}_t}{\beta_t})z - \frac{\dot{\beta}_t}{\beta_t}x\|^2\right]\\
+&= \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim \mathcal{N}(\alpha_t z ,\beta^2_t I_d)}\left[\|u^{\theta}_t(\alpha_t z , + \beta_t \epsilon) - (\dot{\alpha}_t z + \dot{\beta}_t \epsilon)\|^2\right]
+\end{align}
+$$
+
+<p>对于我们的超参数$\alpha$和$\beta$来说，我们只需要满足：</p>
+<ul>
+<li>$\alpha_0 &#x3D; 0$ , $\alpha_1 &#x3D; 1$ </li>
+<li>$\beta &#x3D; 1$ , $\beta_1 &#x3D; 0$<br>我们不妨令：</li>
+<li>$\alpha_t &#x3D; t$</li>
+<li>$\beta_t &#x3D; 1 - t$<br>代入loss函数：
+$$
+\begin{align}
+\mathcal{L}_{CFM}(\theta)
+&=  \mathbb{E}_{t\sim Unif,z\sim p_{data},x \sim \mathcal{N}(\alpha_t z ,\beta^2_t I_d)}\left[\|u^{target}_t(tz + (1-t)\epsilon)-(z-\epsilon)\|^2\right]
+\end{align}
+$$
+
+这是一个非常简洁的形式了，我们解读一下：对于我们训练的神经网络来说，采样一个目标分布的样本z，为其添加噪声输入神经网络中，要求其输出<strong>样本与”所添加噪声“的差距</strong></li>
+</ul>
+<hr>
+<p>ok，数学太多了，在马不停蹄进入sde之前，我们似乎先训练一个简单的flow model会更加振奋人心，现在我们来做一个flow model吧</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">import</span> torch.nn <span class="keyword">as</span> nn</span><br><span class="line"><span class="keyword">import</span> torch.optim <span class="keyword">as</span> optim</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">from</span> torchvision <span class="keyword">import</span> datasets, transforms</span><br><span class="line"><span class="keyword">from</span> torchvision.utils <span class="keyword">import</span> save_image, make_grid</span><br><span class="line"><span class="keyword">from</span> tqdm <span class="keyword">import</span> tqdm</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> math</span><br><span class="line"><span class="keyword">from</span> PIL <span class="keyword">import</span> Image</span><br><span class="line"><span class="keyword">from</span> abc <span class="keyword">import</span> ABC, abstractmethod</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">device = torch.device(<span class="string">&quot;cuda&quot;</span> <span class="keyword">if</span> torch.cuda.is_available() <span class="keyword">else</span> <span class="string">&quot;cpu&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># --- Time Embedding 模块 ---</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SinusoidalPositionEmbeddings</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, dim</span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        <span class="variable language_">self</span>.dim = dim</span><br><span class="line">        <span class="variable language_">self</span>.half_dim = dim // <span class="number">2</span></span><br><span class="line">        <span class="variable language_">self</span>.emb_scale = np.log(<span class="number">10000</span>) / (<span class="variable language_">self</span>.half_dim - <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, time</span>):</span><br><span class="line">        device = time.device</span><br><span class="line">        embeddings = torch.exp(torch.arange(<span class="variable language_">self</span>.half_dim, device=device) * -<span class="variable language_">self</span>.emb_scale)</span><br><span class="line">        embeddings = time * embeddings.unsqueeze(<span class="number">0</span>)</span><br><span class="line">        embeddings = torch.cat((embeddings.sin(), embeddings.cos()), dim=-<span class="number">1</span>)</span><br><span class="line">        <span class="keyword">return</span> embeddings</span><br><span class="line"></span><br><span class="line"><span class="comment"># --- 卷积块 ---</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Block</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, in_ch, out_ch, time_emb_dim, up=<span class="literal">False</span></span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        <span class="variable language_">self</span>.time_mlp =  nn.Linear(time_emb_dim, out_ch)</span><br><span class="line">        <span class="keyword">if</span> up:</span><br><span class="line">            <span class="variable language_">self</span>.conv1 = nn.Conv2d(<span class="number">2</span>*in_ch, out_ch, <span class="number">3</span>, padding=<span class="number">1</span>)</span><br><span class="line">            <span class="variable language_">self</span>.transform = nn.ConvTranspose2d(out_ch, out_ch, <span class="number">4</span>, <span class="number">2</span>, <span class="number">1</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="variable language_">self</span>.conv1 = nn.Conv2d(in_ch, out_ch, <span class="number">3</span>, padding=<span class="number">1</span>)</span><br><span class="line">            <span class="variable language_">self</span>.transform = nn.Conv2d(out_ch, out_ch, <span class="number">4</span>, <span class="number">2</span>, <span class="number">1</span>)</span><br><span class="line">        <span class="variable language_">self</span>.conv2 = nn.Conv2d(out_ch, out_ch, <span class="number">3</span>, padding=<span class="number">1</span>)</span><br><span class="line">        <span class="variable language_">self</span>.bnorm1 = nn.BatchNorm2d(out_ch)</span><br><span class="line">        <span class="variable language_">self</span>.bnorm2 = nn.BatchNorm2d(out_ch)</span><br><span class="line">        <span class="variable language_">self</span>.relu  = nn.SiLU()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x, t, </span>):</span><br><span class="line">        h = <span class="variable language_">self</span>.bnorm1(<span class="variable language_">self</span>.relu(<span class="variable language_">self</span>.conv1(x)))</span><br><span class="line">        time_emb = <span class="variable language_">self</span>.relu(<span class="variable language_">self</span>.time_mlp(t))</span><br><span class="line">        time_emb = time_emb[(..., ) + (<span class="literal">None</span>, ) * <span class="number">2</span>]</span><br><span class="line">        h = h + time_emb</span><br><span class="line">        h = <span class="variable language_">self</span>.bnorm2(<span class="variable language_">self</span>.relu(<span class="variable language_">self</span>.conv2(h)))</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.transform(h)</span><br><span class="line"></span><br><span class="line"><span class="comment"># --- U-Net ---</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">SimpleUNet</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        image_channels = <span class="number">1</span></span><br><span class="line">        down_channels = (<span class="number">32</span>, <span class="number">64</span>, <span class="number">128</span>)</span><br><span class="line">        up_channels = (<span class="number">128</span>, <span class="number">64</span>, <span class="number">32</span>)</span><br><span class="line">        out_dim = <span class="number">1</span> </span><br><span class="line">        time_emb_dim = <span class="number">32</span></span><br><span class="line"></span><br><span class="line">        <span class="variable language_">self</span>.time_mlp = nn.Sequential(</span><br><span class="line">            SinusoidalPositionEmbeddings(time_emb_dim),</span><br><span class="line">            nn.Linear(time_emb_dim, time_emb_dim),</span><br><span class="line">            nn.SiLU()</span><br><span class="line">        )</span><br><span class="line">        </span><br><span class="line">        <span class="variable language_">self</span>.conv0 = nn.Conv2d(image_channels, down_channels[<span class="number">0</span>], <span class="number">3</span>, padding=<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">self</span>.downs = nn.ModuleList([Block(down_channels[i], down_channels[i+<span class="number">1</span>], \</span><br><span class="line">                                    time_emb_dim) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(down_channels)-<span class="number">1</span>)])</span><br><span class="line">        </span><br><span class="line">        <span class="variable language_">self</span>.ups = nn.ModuleList([Block(up_channels[i], up_channels[i+<span class="number">1</span>], \</span><br><span class="line">                                        time_emb_dim, up=<span class="literal">True</span>) <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(up_channels)-<span class="number">1</span>)])</span><br><span class="line"></span><br><span class="line">        <span class="variable language_">self</span>.output = nn.Conv2d(up_channels[-<span class="number">1</span>], out_dim, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x, t</span>):</span><br><span class="line">        t = <span class="variable language_">self</span>.time_mlp(t)</span><br><span class="line">        x = <span class="variable language_">self</span>.conv0(x)</span><br><span class="line">        residuals = []</span><br><span class="line">        <span class="keyword">for</span> down <span class="keyword">in</span> <span class="variable language_">self</span>.downs:</span><br><span class="line">            x = down(x, t)</span><br><span class="line">            residuals.append(x)</span><br><span class="line">        <span class="keyword">for</span> up <span class="keyword">in</span> <span class="variable language_">self</span>.ups:</span><br><span class="line">            residual = residuals.pop()</span><br><span class="line">            <span class="keyword">if</span> x.shape != residual.shape:</span><br><span class="line">                x = transforms.Resize(residual.shape[<span class="number">2</span>:])(x)</span><br><span class="line">            x = torch.cat((x, residual), dim=<span class="number">1</span>)</span><br><span class="line">            x = up(x, t)</span><br><span class="line">        <span class="keyword">return</span> <span class="variable language_">self</span>.output(x)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">compute_loss</span>(<span class="params">model, z</span>):</span><br><span class="line">    batch_size = z.shape[<span class="number">0</span>]</span><br><span class="line">    epsilon = torch.randn_like(z).to(device)</span><br><span class="line">    t = torch.rand(batch_size, <span class="number">1</span>).to(device)</span><br><span class="line">    t_img = t.view(batch_size, <span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>)</span><br><span class="line">    x_t = t_img * z + (<span class="number">1</span> - t_img) * epsilon <span class="comment"># x_t = t * z + (1 - t) * epsilon</span></span><br><span class="line">    u_target = z - epsilon <span class="comment"># loss = ||u - (z - epsilon)||^2</span></span><br><span class="line">    u_pred = model(x_t, t)</span><br><span class="line">    loss = nn.functional.mse_loss(u_pred, u_target)</span><br><span class="line">    <span class="keyword">return</span> loss</span><br><span class="line"></span><br><span class="line"><span class="meta">@torch.no_grad()</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">simulate</span>(<span class="params">model, n_samples=<span class="number">16</span>, n_steps=<span class="number">100</span></span>):</span><br><span class="line">    model.<span class="built_in">eval</span>()</span><br><span class="line">    </span><br><span class="line">    x = torch.randn(n_samples, <span class="number">1</span>, <span class="number">28</span>, <span class="number">28</span>).to(device)</span><br><span class="line">    </span><br><span class="line">    trajectory = []</span><br><span class="line">    </span><br><span class="line">    dt = <span class="number">1.0</span> / n_steps</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> tqdm(<span class="built_in">range</span>(n_steps), desc=<span class="string">&quot;Sampling&quot;</span>):</span><br><span class="line">        current_x = x.clone().detach().cpu()</span><br><span class="line">        current_x = current_x / <span class="number">2</span> + <span class="number">0.5</span></span><br><span class="line">        current_x = current_x.clamp(<span class="number">0</span>, <span class="number">1</span>)</span><br><span class="line">        trajectory.append(current_x)</span><br><span class="line"></span><br><span class="line">        t_value = i / n_steps</span><br><span class="line">        t = torch.full((n_samples, <span class="number">1</span>), t_value).to(device) <span class="comment"># t = i / n_steps</span></span><br><span class="line">        </span><br><span class="line">        v = model(x, t)</span><br><span class="line">        x = x + v * dt <span class="comment"># ode Euler 更新：x_&#123;t+dt&#125; = x_t + v * dt</span></span><br><span class="line">    </span><br><span class="line">    final_x = x.clone().detach().cpu()</span><br><span class="line">    final_x = final_x / <span class="number">2</span> + <span class="number">0.5</span></span><br><span class="line">    final_x = final_x.clamp(<span class="number">0</span>, <span class="number">1</span>)</span><br><span class="line">    trajectory.append(final_x)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> trajectory</span><br><span class="line"></span><br><span class="line"><span class="comment"># --- util function for gif ---</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">save_trajectory_gif</span>(<span class="params">trajectory, filename=<span class="string">&quot;flow_process.gif&quot;</span></span>):</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">f&quot;Saving GIF to <span class="subst">&#123;filename&#125;</span>...&quot;</span>)</span><br><span class="line">    </span><br><span class="line">    frames = []</span><br><span class="line">    <span class="keyword">for</span> x_batch <span class="keyword">in</span> trajectory:</span><br><span class="line">        grid = make_grid(x_batch, nrow=<span class="number">4</span>, padding=<span class="number">2</span>, pad_value=<span class="number">1</span>)</span><br><span class="line">        ndarr = grid.mul(<span class="number">255</span>).add_(<span class="number">0.5</span>).clamp_(<span class="number">0</span>, <span class="number">255</span>).permute(<span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>).to(<span class="string">&#x27;cpu&#x27;</span>, torch.uint8).numpy()</span><br><span class="line">        im = Image.fromarray(ndarr)</span><br><span class="line">        frames.append(im)</span><br><span class="line">    </span><br><span class="line">    frames[<span class="number">0</span>].save(</span><br><span class="line">        filename, </span><br><span class="line">        save_all=<span class="literal">True</span>, </span><br><span class="line">        append_images=frames[<span class="number">1</span>:], </span><br><span class="line">        optimize=<span class="literal">False</span>, </span><br><span class="line">        duration=<span class="number">50</span>, </span><br><span class="line">        loop=<span class="number">0</span></span><br><span class="line">    )</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Done!&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">train_loop</span>(<span class="params">model, train_loader, optimizer, num_epochs</span>):</span><br><span class="line">    model.train()</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> epoch <span class="keyword">in</span> <span class="built_in">range</span>(num_epochs):</span><br><span class="line">        total_loss = <span class="number">0</span></span><br><span class="line">        pbar = tqdm(train_loader, desc=<span class="string">f&quot;Epoch <span class="subst">&#123;epoch+<span class="number">1</span>&#125;</span>/<span class="subst">&#123;num_epochs&#125;</span>&quot;</span>)</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> batch_idx, (data, _) <span class="keyword">in</span> <span class="built_in">enumerate</span>(pbar):</span><br><span class="line">            z = data.to(device)</span><br><span class="line">            optimizer.zero_grad()</span><br><span class="line">            loss = compute_loss(model, z)</span><br><span class="line">            loss.backward()</span><br><span class="line">            optimizer.step()</span><br><span class="line">            total_loss += loss.item()</span><br><span class="line">            pbar.set_postfix(&#123;<span class="string">&quot;Loss&quot;</span>: <span class="string">f&quot;<span class="subst">&#123;loss.item():<span class="number">.4</span>f&#125;</span>&quot;</span>&#125;)</span><br><span class="line">            </span><br><span class="line">        torch.save(model.state_dict(), <span class="string">&quot;flow_unet_mnist.pth&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">prepare_data</span>():</span><br><span class="line">    transform = transforms.Compose([</span><br><span class="line">        transforms.ToTensor(),</span><br><span class="line">        transforms.Normalize((<span class="number">0.5</span>,), (<span class="number">0.5</span>,)) </span><br><span class="line">    ])</span><br><span class="line">    train_data = datasets.MNIST(root=<span class="string">&quot;./data&quot;</span>, train=<span class="literal">True</span>, download=<span class="literal">True</span>, transform=transform)</span><br><span class="line">    train_loader = torch.utils.data.DataLoader(train_data, batch_size=<span class="number">128</span>, shuffle=<span class="literal">True</span>)</span><br><span class="line">    <span class="keyword">return</span> train_loader</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    train_loader = prepare_data()</span><br><span class="line">    model = SimpleUNet().to(device)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> os.path.exists(<span class="string">&quot;flow_unet_mnist.pth&quot;</span>):</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            model.load_state_dict(torch.load(<span class="string">&quot;flow_unet_mnist.pth&quot;</span>, map_location=device))</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;Loaded existing model weights.&quot;</span>)</span><br><span class="line">        <span class="keyword">except</span>:</span><br><span class="line">            <span class="built_in">print</span>(<span class="string">&quot;Weight shape mismatch, starting from scratch.&quot;</span>)</span><br><span class="line"></span><br><span class="line">    optimizer = optim.Adam(model.parameters(), lr=<span class="number">1e-3</span>)</span><br><span class="line">    </span><br><span class="line">    train_loop(model, train_loader, optimizer, num_epochs=<span class="number">5</span>)</span><br><span class="line"></span><br><span class="line">    trajectory = simulate(model, n_samples=<span class="number">16</span>, n_steps=<span class="number">100</span>)</span><br><span class="line">    </span><br><span class="line">    save_trajectory_gif(trajectory, <span class="string">&quot;mnist_generation.gif&quot;</span>)</span><br><span class="line"></span><br><span class="line">    final_image = trajectory[-<span class="number">1</span>]</span><br><span class="line">    save_image(final_image, <span class="string">&quot;unet_final_result.png&quot;</span>, nrow=<span class="number">4</span>)</span><br></pre></td></tr></table></figure>
+<p>下图是我们简单训练了5个epoch得到的结果：<br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/flow_diffusion_insight/mnist_generation.gif" alt="flow_model_result"></p>
+<p>值得注意的是：</p>
+<ul>
+<li>我们需要显式地将时间步t喂给model，我们的$u^{target}_t(x)$也体现了这一点，是一个关于x和t的函数，可以写成$u^{target}(x,t)$会比较直观</li>
+<li>使用mlp没法有效地表达图像数据（我们尝试的结果是，使用mlp不仅收敛速度慢，而且效果很差），我们使用一个简单的unet结构来表达。</li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="https://blog.suchantso.cn">SuchanTso</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="https://blog.suchantso.cn/2026/02/15/Personal-Insight-about-Flow-matching-Diffusion-models-3/">https://blog.suchantso.cn/2026/02/15/Personal-Insight-about-Flow-matching-Diffusion-models-3/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Generative-Models/">Generative Models</a><a class="post-meta__tags" href="/tags/Flow-Matching/">Flow Matching</a><a class="post-meta__tags" href="/tags/Diffusion/">Diffusion</a><a class="post-meta__tags" href="/tags/ODE-SDE/">ODE/SDE</a></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">Next</div><div class="next_info">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2026-02-11</div><div class="title">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)</div></div></a></div><div><a href="/2025/12/17/Personal-Insight-about-Flow-matching-Diffusion-models_1/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2025-12-17</div><div class="title">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)</div></div></a></div></div></div><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> Comment</span></div></div><div class="comment-wrap"><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/tx.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">SuchanTso</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/SuchanTso"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/SuchanTso" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:suchantso@zju.edu.cn" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">Welcome to Suchan's Home</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%AE%AD%E7%BB%83%E4%B8%80%E4%B8%AA%E7%94%9F%E6%88%90%E5%BC%8F%E6%A8%A1%E5%9E%8B-%E4%B8%8A"><span class="toc-number">1.</span> <span class="toc-text">训练一个生成式模型(上)</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#flow-model"><span class="toc-number">1.1.</span> <span class="toc-text">flow model</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9E%E9%A1%BEflow-matching-model%E7%9A%84%E5%AE%9A%E4%B9%89%EF%BC%9A-begin-align-X-0-sim-p-init-quad-dX-t-u-theta-t-X-t-dt-end-align-%E7%9B%B4%E8%A7%89%E4%B8%8A%E8%AF%B4%EF%BC%8C%E6%88%91%E4%BB%AC%E5%BA%94%E8%AF%A5%E5%AE%9A%E4%B9%89loss%E5%87%BD%E6%95%B0%EF%BC%9A%E5%BC%8F%E4%B8%AD-p-t-x-int-p-t-x-z-p-data-z-dz-%E3%80%82%E8%BF%99%E4%B8%AAloss%E5%81%9A%E4%BA%86%E5%87%A0%E4%BB%B6%E4%BA%8B%EF%BC%9A-1%E3%80%81%E6%97%B6%E9%97%B4%E6%AD%A5t%E6%BB%A1%E8%B6%B3-0-1-%E7%9A%84%E5%9D%87%E5%8C%80%E5%88%86%E5%B8%83-2%E3%80%81%E6%88%91%E4%BB%AC%E4%BB%8E-p-data-%E4%B8%AD%E9%87%87%E6%A0%B7z%EF%BC%8C%E6%B7%BB%E5%8A%A0%E5%99%AA%E5%A3%B0%EF%BC%8C%E8%AE%A1%E7%AE%97-u-theta-t-x-3%E3%80%81%E8%AE%A1%E7%AE%97-u-theta-t-x-%E5%92%8C-u-target-t-x-%E5%A6%82%E5%89%8D%E6%96%87%E6%89%80%E8%AF%B4%E6%88%91%E4%BB%AC%E6%B2%A1%E6%B3%95%E7%9B%B4%E6%8E%A5%E8%AE%A1%E7%AE%97-u-target-t-x-%E5%9B%A0%E4%B8%BA%EF%BC%9A%E8%80%8C%E6%88%91%E4%BB%AC%E6%B2%A1%E6%B3%95%E5%BE%97%E5%88%B0-p-t-x-%EF%BC%8C%E4%BA%8E%E6%98%AF%E6%88%91%E4%BB%AC%E5%B0%9D%E8%AF%95%E5%B0%86%E7%9B%AE%E5%85%89%E8%BD%AC%E5%90%91%E6%9D%A1%E4%BB%B6%E6%A6%82%E7%8E%87%E8%B7%AF%E5%BE%84%EF%BC%8C%E6%88%91%E4%BB%AC%E5%AE%9A%E4%B9%89conditional-flow-matching-loss%EF%BC%9A%E8%99%BD%E7%84%B6%E6%98%AF%E5%8F%AF%E4%BB%A5%E8%AE%A1%E7%AE%97%E7%9A%84%EF%BC%8C%E4%BD%86%E6%98%AF%E8%AE%A1%E7%AE%97%E5%87%BA%E6%9D%A5%E6%98%AF%E5%90%A6%E6%9C%89%E7%94%A8%EF%BC%8C%E6%AF%95%E7%AB%9F%E6%88%91%E4%BB%AC%E7%9A%84%E6%9C%80%E7%BB%88%E7%9B%AE%E7%9A%84%E6%98%AF%E8%A6%81%E6%9C%80%E5%B0%8F%E5%8C%96-mathcal-L-FM-theta-%E3%80%82%E7%AD%94%E6%A1%88%E6%98%AF%E7%AD%89%E4%BB%B7%E7%9A%84%EF%BC%8C%E6%88%91%E4%BB%AC%E5%85%88%E6%94%BE%E5%87%BA%E7%BB%93%E8%AE%BA%EF%BC%9A-%E4%B8%8B%E9%9D%A2%E7%BB%99%E5%87%BA%E8%AF%81%E6%98%8E%EF%BC%9A"><span class="toc-number">1.2.</span> <span class="toc-text">回顾flow matching model的定义：$$\begin{align}X_0 \sim p_{init} , \quad dX_t &#x3D; u^{\theta}t(X_t)dt\end{align}$$直觉上说，我们应该定义loss函数：
+$$
+\begin{align}
+\mathcal{L}_{FM}(\theta) &#x3D; \mathbb{E}_{t\sim Unif, x\sim p_t}\left[ \| u^{\theta}_t(x) - u^{target}_t(x)\|^2\right]\\
+&#x3D; \mathbb{E}_{t\sim Unif,z \sim p_{data}, x\sim p_t(\cdot | z)}\left[ \| u^{\theta}_t(x) - u^{target}_t(x)\|^2\right]
+\end{align}
+$$
+式中$p_t(x) &#x3D; \int p_t(x|z)p{data}(z)dz$。这个loss做了几件事：* 1、时间步t满足[0,1]的均匀分布* 2、我们从$p_{data}$中采样z，添加噪声，计算$u^{\theta}_t(x)$* 3、计算$u^{\theta}_t(x)$和$u^{target}_t(x)$如前文所说我们没法直接计算$u^{target}t(x)$,因为：
+$$
+\begin{align}
+u^{target}_t(x) &#x3D; \int u^{target}_t(x|z) \frac{p_t(x|z)p_{data}(z)}{p_t(x)} \mathrm{d}z
+\end{align}
+$$
+而我们没法得到$p_t(x)$，于是我们尝试将目光转向条件概率路径，我们定义conditional flow matching loss：
+$$
+\begin{align}
+\mathcal{L}_{CFM}(\theta) &#x3D; \mathbb{E}_{t\sim Unif,z \sim p_{data}, x\sim p_t(\cdot | z)}\left[ \| u^{\theta}_t(x) - u^{target}_t(x|z)\|^2\right]
+\end{align}
+$$
+虽然$\mathcal{L}_{CFM}(\theta)$是可以计算的，但是计算出来是否有用，毕竟我们的最终目的是要最小化$\mathcal{L}{FM}(\theta)$。答案是等价的，我们先放出结论：
+$$
+\begin{align}
+\mathcal{L}_{FM}(\theta) &#x3D; \mathcal{L}_{CFM}(\theta) + C
+\end{align}
+$$
+### 下面给出证明：</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/02/15/Personal-Insight-about-Flow-matching-Diffusion-models-3/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (3)"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (3)"/></a><div class="content"><a class="title" href="/2026/02/15/Personal-Insight-about-Flow-matching-Diffusion-models-3/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (3)">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (3)</a><time datetime="2026-02-15T08:04:36.000Z" title="Created 2026-02-15 16:04:36">2026-02-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)"/></a><div class="content"><a class="title" href="/2026/02/11/Personal-Insight-about-Flow-matching-Diffusion-models-2/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (2)</a><time datetime="2026-02-11T13:51:40.000Z" title="Created 2026-02-11 21:51:40">2026-02-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/17/Personal-Insight-about-Flow-matching-Diffusion-models_1/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)"/></a><div class="content"><a class="title" href="/2025/12/17/Personal-Insight-about-Flow-matching-Diffusion-models_1/" title="Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)">Theoretical Perspectives on Flow Matching &amp; Diffusion Models (1)</a><time datetime="2025-12-17T13:51:40.000Z" title="Created 2025-12-17 21:51:40">2025-12-17</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('https://cdn.jsdelivr.net/gh/jerryc127/CDN@latest/cover/default_bg.png')"><div id="footer-wrap"><div class="copyright">&copy;2024 - 2026 By SuchanTso</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="Scroll To Comments"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="Back To Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.8.8/dist/lazyload.iife.min.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.1
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, '']
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.min.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typesetPromise()
+}</script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"><script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/copy-tex.min.js"></script><script>(() => {
+  document.querySelectorAll('#article-container span.katex-display').forEach(item => {
+    btf.wrap(item, 'div', { class: 'katex-wrap'})
+  })
+})()</script><script>(() => {
+  const initValine = () => {
+    const valine = new Valine(Object.assign({
+      el: '#vcomment',
+      appId: '7dV6j7IWjjIZv7thiRxm70Ra-gzGzoHsz',
+      appKey: 'sC96uyhY0UCNBG8EWS8YdmFO',
+      avatar: 'monsterid',
+      serverURLs: '',
+      emojiMaps: "",
+      path: window.location.pathname,
+      visitor: false
+    }, null))
+  }
+
+  const loadValine = async () => {
+    if (typeof Valine === 'function') initValine()
+    else {
+      await getScript('https://cdn.jsdelivr.net/npm/valine@1.5.1/dist/Valine.min.js')
+      initValine()
+    }
+  }
+
+  if ('Valine' === 'Valine' || !true) {
+    if (true) btf.loadComment(document.getElementById('vcomment'),loadValine)
+    else setTimeout(loadValine, 0)
+  } else {
+    window.loadOtherComment = loadValine
+  }
+})()</script></div><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+
+  // removeEventListener
+  btf.removeGlobalFnEvent('pjax')
+  btf.removeGlobalFnEvent('themeChange')
+
+  document.getElementById('rightside').classList.remove('rightside-show')
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+  typeof disqusjs === 'object' && disqusjs.destroy()
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+})
+
+document.addEventListener('pjax:error', e => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">Search</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  Loading the Database</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="Search for Posts" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.13.0"></script></div></div></body></html>
